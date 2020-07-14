@@ -1,0 +1,60 @@
+name: application-build
+on: push
+
+env:
+  IMAGE_REGISTRY: 'quay.io/heubeck/statuspage-prometheus-exporter'
+jobs:
+  build:
+    name: Application Build using Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
+      - name: Run chart-testing (lint)
+        id: lint
+        uses: helm/chart-testing-action@v1.0.0-rc.1
+        with:
+          command: lint
+
+      - name: Application build using docker
+        run: |
+          cd "$WORKING_DIR"
+
+          # read application version from pom.xml
+          VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.1.0:evaluate -Dexpression=project.version -q -DforceStdout)
+
+          # application and image build using docker
+          docker build . -f src/main/docker/Dockerfile.native -t ${IMAGE_REGISTRY}:${VERSION}
+
+          # provide image name for later steps
+          echo ::set-env name=FQIN::${IMAGE_REGISTRY}:${VERSION}
+
+      - name: Docker push
+        if: github.ref == 'refs/heads/master'
+        env:
+          QUAY_USER: ${{ secrets.QUAY_USER }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+        run: |
+          docker login -u="$QUAY_USER" -p="$QUAY_PASSWORD" quay.io
+          docker push ${{ env.FQIN }}
+
+      - name: Package and Publish charts
+        if: github.ref == 'refs/heads/master'
+        uses: J12934/helm-gh-pages-action@v2.0.0
+        with:
+          deploy-branch: gh-pages
+          access-token: "${{ secrets.PAGES_TOKEN }}"
+
+      - name: Create kind cluster
+        if: github.ref == 'refs/heads/master'
+        uses: helm/kind-action@v1.0.0-rc.1
+
+      - name: Run chart-testing (install)
+        if: github.ref == 'refs/heads/master'
+        uses: helm/chart-testing-action@v1.0.0-rc.1
+        with:
+          command: install
