@@ -1,0 +1,17 @@
+{{ if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+    name: {{ .Release.Name }}
+    namespace: {{ .Values.serviceMonitor.namespace }}
+spec:
+    jobLabel: {{ .Release.Name }}
+    selector:
+        matchLabels:
+            app: {{ .Release.Name }}
+    namespaceSelector:
+        matchNames:
+            - {{ .Release.Namespace }}
+    endpoints:
+        - port: http
+{{ end }}
