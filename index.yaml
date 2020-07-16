@@ -1,0 +1,18 @@
+apiVersion: v1
+entries:
+  statuspage-prometheus-exporter:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2020-07-16T18:42:27.459879003Z"
+    description: The Helm chart for deploying the statuspage.io prometheus exporter
+    digest: d33180aa2548ec1c502e84e8e8b76d654168d341122a6c87add22b3d2c2a6776
+    home: https://github.com/heubeck/statuspage-prometheus-exporter
+    maintainers:
+    - name: heubeck
+      url: https://github.com/heubeck
+    name: statuspage-prometheus-exporter
+    type: application
+    urls:
+    - statuspage-prometheus-exporter-2.0.0.tgz
+    version: 2.0.0
+generated: "2020-07-16T18:42:27.459167897Z"
